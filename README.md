@@ -5,7 +5,11 @@
 ![transformers](https://img.shields.io/static/v1?label=transformers&message=4.38.2&color=ffffff)
 ![huggingface-hub](https://img.shields.io/static/v1?label=huggingface-hub&message=0.21.3&color=ffcc33)
 
-![fishing-pole](assets/fishing-pole.png)
+<p align="center">
+  <br>
+  <img src="assets/fishing-pole.png" width="65%"/>
+  </br>
+</p>
 
 ## Requirements
 
@@ -25,12 +29,12 @@ poetry install
 Download the example dataset:
 ```bash
 git clone https://github.com/ml-explore/mlx-examples.git
-DATASET=$(pwd)/mlx-examples/lora/data
+export DATASET=$(pwd)/mlx-examples/lora/data
 ```
 Quantize the model:
 ```bash
 poetry run python -m tuna.lora.quantize model=microsoft/phi-2 bits=4
-# MODEL=abs/path/to/phi-2_q4
+export MODEL=abs/path/to/phi-2_q4
 ```
 Tune the quantized model:
 ```bash

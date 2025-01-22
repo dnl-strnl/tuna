@@ -1,5 +1,6 @@
 import copy
 import hydra
+import logging as log
 import mlx.core as mx
 import mlx.nn as nn
 from mlx.utils import tree_flatten
@@ -20,7 +21,7 @@ def main(cfg: DictConfig):
     model_class, model_args_class = get_classes(config=config)
 
     model = model_class(model_args_class.from_dict(config))
-    model.load_weights(list(weights.items()))
+    model.load_weights(list(weights.items()), strict=False)
 
     q_fn = lambda m: isinstance(m, nn.Linear) and m.weight.shape[0] != 8
 
@@ -38,6 +39,8 @@ def main(cfg: DictConfig):
     model_name = f'{Path(cfg.model).stem}_q{cfg.bits}'
 
     save_model(model_name, weights, tokenizer, config)
+
+    log.info(f'🔢 save {model_name=}')
 
     return quantized_weights, quantized_config
 

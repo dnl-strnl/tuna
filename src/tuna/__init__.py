@@ -7,11 +7,12 @@ from pathlib import Path
 import transformers
 
 
-def configure(str_path, config_dir='config', max_levels=5):
+def configure(str_path, config_dir='config', max_levels=6):
     path = Path(str_path).resolve()
+    print(path)
     proj_root = None
 
-    for i in range(2, max_levels):
+    for i in range(1, max_levels):
         potential_root = path.parents[i-1]
         if (potential_root / config_dir).exists():
             proj_root = potential_root

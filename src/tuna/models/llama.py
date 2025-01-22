@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import mlx.core as mx
 import mlx.nn as nn
-from tuna.lora.models import BaseModelArgs, RMSNorm
+from tuna.models import BaseModelArgs, RMSNorm
 from typing import Dict, Optional, Tuple, Union
 
 
@@ -29,7 +29,7 @@ class ModelArgs(BaseModelArgs):
                 raise ValueError(f'rope_scaling must contain keys {required_keys}')
 
             if self.rope_scaling['type'] != 'linear':
-                raise ValueError('rope_scaling 'type' currently only supports 'linear'')
+                raise ValueError('rope_scaling "type" currently only supports "linear"')
 
 
 class Attention(nn.Module):
@@ -137,7 +137,7 @@ class TransformerBlock(nn.Module):
         return out, cache
 
 
-class LlamaModel(nn.Module):
+class Model(nn.Module):
     def __init__(self, args: ModelArgs):
         super().__init__()
         self.args = args
@@ -171,10 +171,10 @@ class LlamaModel(nn.Module):
         return self.norm(h), cache
 
 
-class LlamaBase(nn.Module):
+class Base(nn.Module):
     def __init__(self, args: ModelArgs):
         super().__init__()
-        self.model = LlamaModel(args)
+        self.model = Model(args)
         self.lm_head = nn.Linear(args.hidden_size, args.vocab_size, bias=False)
 
     def __call__(

@@ -6,6 +6,7 @@ import mlx.nn as nn
 import mlx.core as mx
 from mlx.utils import tree_flatten
 import numpy as np
+import os
 from omegaconf import DictConfig
 from pathlib import Path
 import time
@@ -61,7 +62,7 @@ def main(cfg: DictConfig):
     else: raise NotImplementedError()
 
     # freeze all layers other than LoRA linear layers
-    train_params, total_params = freeze_layers(model, cfg.lora.layers)
+    train_params, total_params = freeze_layers(model, cfg.lora.layers, cfg.lora.rank)
     log.info(f'freeze layers ❄️  {train_params=:.3f}M / {total_params=:.3f}M')
 
     train_set = Dataset(Path(dataset) / 'train')
@@ -77,6 +78,7 @@ def main(cfg: DictConfig):
     eval_args = lambda dataset:dict(model=model, loss=loss, tokenizer=tknzr,
         dataset=dataset, batch_size=batch_size, batches=batches
     )
+    file_size = lambda path:f'{os.path.getsize(path)/1024**2:.2f} MB'
     trainable_parameters = lambda:dict(tree_flatten(model.trainable_parameters()))
 
     if cfg.train:
@@ -122,13 +124,13 @@ def main(cfg: DictConfig):
             # save adapter weights
             if itr % cfg.train.save_every == 0:
                 mx.savez(adapter, **trainable_parameters())
-                log.info(f'{itr=:7}: save {adapter=}')
+                log.info(f'{itr=:7}: save {adapter=} [{file_size(adapter)=}]')
 
         tune_stop = str(datetime.datetime.now())
         log.info(f'🎣 {tune_stop=}')
 
         # save adapter weights
-        log.info(f'save 🔌 {adapter=}')
+        log.info(f'save 🔌 {adapter=} [{file_size(adapter)=}]')
         mx.savez(adapter, **trainable_parameters())
     else:
         # load adapter weights

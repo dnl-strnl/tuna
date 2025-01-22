@@ -11,6 +11,7 @@ mode: lora
 fuse: true
 lora:
   layers: 16
+  rank: 8
 
 optimizer:
   _target_: mlx.optimizers.Adam

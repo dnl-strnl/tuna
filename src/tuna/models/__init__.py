@@ -40,7 +40,7 @@ class ModelArgs:
                 raise ValueError(f'rope_scaling must contain keys {required_keys}')
 
             if self.rope_scaling['type'] != 'linear':
-                raise ValueError('rope_scaling 'type' currently only supports 'linear'')
+                raise ValueError('rope_scaling "type" currently only supports "linear"')
 
     @classmethod
     def from_dict(cls, params):

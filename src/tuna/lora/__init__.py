@@ -13,10 +13,10 @@ from pathlib import Path
 import transformers
 from typing import Dict, Generator, List, Optional, Tuple, Union
 
-from tuna.lora.models import ModelArgs
-from tuna.lora.models import llama
-from tuna.lora.models import mixtral
-from tuna.lora.models import phi2
+from tuna.models import ModelArgs
+from tuna.models import llama
+from tuna.models import mixtral
+from tuna.models import phi2
 model_mapping = {
     'llama': llama,
     # mistral is compatible with llama
@@ -28,7 +28,7 @@ model_mapping = {
 def get_classes(config: dict):
     model_type = config['model_type']
     if model_type not in model_mapping:
-        msg = f'Model type {model_type} not supported.'
+        msg = f'{model_type=} not supported.'
         logging.error(msg)
         raise ValueError(msg)
     arch = model_mapping[model_type]
@@ -83,7 +83,7 @@ class LoRALinear(nn.Module):
         self,
         input_dims: int,
         output_dims: int,
-        lora_rank: int = 8,
+        rank: int = 8,
         bias: bool = False,
         scale: float = 20.0,
     ):
@@ -97,9 +97,9 @@ class LoRALinear(nn.Module):
         self.lora_a = mx.random.uniform(
             low=-scale,
             high=scale,
-            shape=(input_dims, lora_rank),
+            shape=(input_dims, rank),
         )
-        self.lora_b = mx.zeros(shape=(lora_rank, output_dims))
+        self.lora_b = mx.zeros(shape=(rank, output_dims))
 
     def __call__(self, x):
         dtype = self.linear.weight.dtype
@@ -110,13 +110,13 @@ class LoRALinear(nn.Module):
         return y + self.scale * z
 
 
-def freeze_layers(model, layers:int):
+def freeze_layers(model, layers:int, rank:int):
     model.freeze()
     for l in model.model.layers[len(model.model.layers) - layers :]:
-        l.self_attn.q_proj = LoRALinear.from_linear(l.self_attn.q_proj)
-        l.self_attn.v_proj = LoRALinear.from_linear(l.self_attn.v_proj)
+        l.self_attn.q_proj = LoRALinear.from_linear(l.self_attn.q_proj, rank=rank)
+        l.self_attn.v_proj = LoRALinear.from_linear(l.self_attn.v_proj, rank=rank)
         if hasattr(l, 'block_sparse_moe'):
-            l.block_sparse_moe.gate = LoRALinear.from_linear(l.block_sparse_moe.gate)
+            l.block_sparse_moe.gate = LoRALinear.from_linear(l.block_sparse_moe.gate, rank=rank)
 
     total_params = sum(v.size for _, v in tree_flatten(model.parameters())) / 10**6
     train_params = sum(v.size for _, v in tree_flatten(model.trainable_parameters())) / 10**6
@@ -124,7 +124,9 @@ def freeze_layers(model, layers:int):
 
 
 def load_lora(path_or_hf_repo: str):
+
     model_path = Path(path_or_hf_repo)
+
     if not model_path.exists():
         model_path = Path(
             snapshot_download(
@@ -147,7 +149,9 @@ def load_lora(path_or_hf_repo: str):
 
     model_class, model_args_class = get_classes(config=config)
     model_args = model_args_class.from_dict(config)
+
     model = model_class(model_args)
+
     if quantization is not None:
         nn.QuantizedLinear.quantize_module(
             model,

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import mlx.core as mx
 import mlx.nn as nn
 import numpy as np
-from tuna.lora.models import BaseModelArgs, RMSNorm
+from tuna.models import BaseModelArgs, RMSNorm
 from typing import Dict, Optional, Tuple, Union
 
 
