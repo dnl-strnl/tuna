@@ -1,0 +1,8 @@
+model: microsoft/phi-2
+bits: 4
+group_size: 64
+dtype: float16
+upload: null
+
+defaults:
+  - hydra.yaml
